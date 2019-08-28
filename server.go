@@ -18,56 +18,63 @@ import (
 // 	CreatedAt string `json:"created_at"`
 // }
 
-// type Chat struct {
-// 	Id        string `json:"id"`
-// 	Name      string `json:"name"`
-// 	Users     string `json:"users"`
-// 	CreatedAt string `json:"created_at"`
-// }
-
 func main() {
 
 	fmt.Println("Server is listening...")
 	models.DbOpen("root:@/chat_data")
+	defer models.DbClose()
 
-	http.HandleFunc("/users/add", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Add new user")
-		var user models.User
-
-		//читаем тело запроса
-		body, err := ioutil.ReadAll(r.Body)
-		//проверяем на наличие ошибки
-		if err != nil {
-			fmt.Fprintf(w, "err %q\n", err, err.Error())
-		} else {
-			//если все нормально - пишем по указателю в структуру
-			err = json.Unmarshal(body, &user)
-			if err != nil {
-				fmt.Fprintln(w, "can't unmarshal: ", err.Error())
-			}
-		}
-		fmt.Println("username = ", user.UserName)
-		user.Id = models.DbUserAdd(user.UserName, user.CreatedAt)
-
-		fmt.Println("id:", user.Id)
-
-	})
-	http.HandleFunc("/chats/add", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Add new chat with users")
-	})
-	http.HandleFunc("/chats/get", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Get list of all chats from user")
-	})
-	http.HandleFunc("/messages/add", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Send message from user in chat")
-	})
-	http.HandleFunc("/messages/get", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Get list of messages in chat")
-	})
+	http.HandleFunc("/users/add", AddUser)
+	http.HandleFunc("/chats/add", AddChat)
+	http.HandleFunc("/chats/get", GetListOfChats)
+	http.HandleFunc("/messages/add", AddMessage)
+	http.HandleFunc("/messages/get", GetListOfMessages)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "messages/get messages/add chats/get chats/add users/add")
 	})
 
 	log.Fatal(http.ListenAndServe("localhost:8181", nil))
+}
+
+func AddUser(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(405), 405)
+		return
+	}
+	var user models.User
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "err %q\n", err, err.Error())
+	} else {
+		err = json.Unmarshal(body, &user)
+		if user.UserName == "" || err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+	}
+	id := models.DbUserAdd(user.UserName)
+	if id == 0 {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	} else {
+		fmt.Fprintln(w, id)
+	}
+
+}
+
+func AddChat(w http.ResponseWriter, r *http.Request) {
+	//новый чат между пользователями
+}
+
+func AddMessage(w http.ResponseWriter, r *http.Request) {
+	//отправить сообшение от юзера
+}
+func GetListOfChats(w http.ResponseWriter, r *http.Request) {
+	//получить список чатов юзера по времени создания
+}
+func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
+	//получить список сообщений в чате по времени создания
 }
