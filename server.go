@@ -6,13 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-)
 
-type User struct {
-	Id        int    `json:"id"`
-	UserName  string `json:"username"`
-	CreatedAt string `json:"created_at"`
-}
+	"./models"
+)
 
 // type Message struct {
 // 	Id        string `json:"id"`
@@ -32,10 +28,11 @@ type User struct {
 func main() {
 
 	fmt.Println("Server is listening...")
+	models.DbOpen("root:@/chat_data")
 
 	http.HandleFunc("/users/add", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Add new user")
-		var user User
+		var user models.User
 
 		//читаем тело запроса
 		body, err := ioutil.ReadAll(r.Body)
@@ -46,11 +43,13 @@ func main() {
 			//если все нормально - пишем по указателю в структуру
 			err = json.Unmarshal(body, &user)
 			if err != nil {
-				fmt.Println(w, "can't unmarshal: ", err.Error())
+				fmt.Fprintln(w, "can't unmarshal: ", err.Error())
 			}
 		}
-		//выводим полученные данные (можно делать с данными все, что угодно)
-		fmt.Fprintln(w, "id:", user.Id, "UserName:", user.UserName, "created_at:", user.CreatedAt)
+		fmt.Println("username = ", user.UserName)
+		user.Id = models.DbUserAdd(user.UserName, user.CreatedAt)
+
+		fmt.Println("id:", user.Id)
 
 	})
 	http.HandleFunc("/chats/add", func(w http.ResponseWriter, r *http.Request) {
