@@ -10,14 +10,6 @@ import (
 	"./models"
 )
 
-// type Message struct {
-// 	Id        string `json:"id"`
-// 	Chat      string `json:"chat"`
-// 	Author    string `json:"author"`
-// 	Text      string `json:"text"`
-// 	CreatedAt string `json:"created_at"`
-// }
-
 func main() {
 
 	fmt.Println("Server is listening...")
@@ -37,10 +29,17 @@ func main() {
 	log.Fatal(http.ListenAndServe("localhost:8181", nil))
 }
 
+func IsPost(post string, w http.ResponseWriter) bool {
+	if post != "POST" {
+		http.Error(w, http.StatusText(405), 405)
+		return false
+	}
+	return true
+}
+
 func AddUser(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != "POST" {
-		http.Error(w, http.StatusText(405), 405)
+	if !IsPost(r.Method, w) {
 		return
 	}
 	var user models.User
