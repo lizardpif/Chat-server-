@@ -11,7 +11,7 @@ import (
 var db *sql.DB
 
 func DbOpen(sourceName string) {
-	//"root:@/chat_data"
+	//создание таблицы, если нету
 	var err error
 
 	db, err = sql.Open("mysql", sourceName)
@@ -22,4 +22,8 @@ func DbOpen(sourceName string) {
 	if err = db.Ping(); err != nil {
 		log.Panic(err)
 	}
+}
+
+func DbClose() {
+	db.Close()
 }

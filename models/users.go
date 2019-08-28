@@ -7,12 +7,11 @@ type User struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func DbUserAdd(u string, c string) int {
+func DbUserAdd(u string) int {
 
-	res, err := db.Exec("INSERT INTO chat_data.users (username, created_at) VALUES (?, ?)", u, c)
+	res, err := db.Exec("INSERT INTO chat_data.users (username) VALUES (?)", u)
 	if err != nil {
 		return 0
-
 	}
 
 	id, _ := res.LastInsertId()
