@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 
 	"./models"
 )
@@ -73,10 +74,15 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "err %q\n", err, err.Error())
+		http.Error(w, http.StatusText(400), 400)
+		return
 	} else {
 		err = json.Unmarshal(body, &chat)
 		if err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		} //сделать проверку на повтор юзеров
+		if !IsRepeate(chat.Users) {
 			http.Error(w, http.StatusText(400), 400)
 			return
 		}
@@ -109,4 +115,14 @@ func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	if !IsPost(r.Method, w) {
 		return
 	}
+}
+
+func IsRepeate(users []int) bool {
+	sort.Ints(users)
+	for i, us := range users {
+		if i > 0 && us == users[i-1] {
+			return false
+		}
+	}
+	return true
 }
