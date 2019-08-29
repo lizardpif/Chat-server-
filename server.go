@@ -65,15 +65,48 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddChat(w http.ResponseWriter, r *http.Request) {
-	//новый чат между пользователями
+	if !IsPost(r.Method, w) {
+		return
+	}
+	//новый чат между пользователями users_id
+	var chat models.Chat
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "err %q\n", err, err.Error())
+	} else {
+		err = json.Unmarshal(body, &chat)
+		if err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+	}
+
+	id := models.DbChatAdd(chat)
+	if id == 0 {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	} else {
+		fmt.Fprintln(w, id)
+	}
+
 }
 
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	//отправить сообшение от юзера
+	if !IsPost(r.Method, w) {
+		return
+	}
 }
 func GetListOfChats(w http.ResponseWriter, r *http.Request) {
 	//получить список чатов юзера по времени создания
+	if !IsPost(r.Method, w) {
+		return
+	}
 }
 func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	//получить список сообщений в чате по времени создания
+	if !IsPost(r.Method, w) {
+		return
+	}
 }
