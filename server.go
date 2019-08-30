@@ -11,6 +11,9 @@ import (
 	"./models"
 )
 
+//проверка существования таблиц, если нет, то создать!
+//в передаче id текстовое или числовое!
+
 func main() {
 
 	fmt.Println("Server is listening...")
@@ -28,6 +31,23 @@ func main() {
 	})
 
 	log.Fatal(http.ListenAndServe("localhost:8181", nil))
+}
+
+func CheckAddChat(chat models.Chat) bool {
+	//сделать проверку на повтор юзеров
+	if !IsRepeate(chat.Users) {
+		return false
+	} //проверка а есть ли такой юзер?
+	if !models.DbIsExistInts(chat.Users, "chat_data.users", "id") {
+		return false
+	} //если слишком мало юзеров
+	if len(chat.Users) < 2 {
+		return false
+	} //а если такой чат уже существует?
+	if !models.DbIsExistStr(chat.Name, "chat_data.chats_id", "name") {
+		return false
+	}
+	return true
 }
 
 func IsPost(post string, w http.ResponseWriter) bool {
@@ -81,8 +101,8 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, http.StatusText(400), 400)
 			return
-		} //сделать проверку на повтор юзеров
-		if !IsRepeate(chat.Users) {
+		}
+		if !CheckAddChat(chat) {
 			http.Error(w, http.StatusText(400), 400)
 			return
 		}
@@ -100,12 +120,43 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	//отправить сообшение от юзера
+
 	if !IsPost(r.Method, w) {
 		return
 	}
+
+	var msg models.Message
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, http.StatusText(400), 400)
+		return
+	} else {
+		err = json.Unmarshal(body, &msg)
+		if err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+		//существует ли чат?
+		//существует ли автор?
+		if !models.DbIsExistChatAuthor(msg.Chat, msg.Author, "chat_data.chats", "id") {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+
+	}
+	id := models.DbMessageAdd(msg)
+	if id == 0 {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	} else {
+		fmt.Fprintln(w, id)
+	}
+
 }
+
 func GetListOfChats(w http.ResponseWriter, r *http.Request) {
-	//получить список чатов юзера по времени создания
+	//получить список чатов юзера по времени создания последнего сообщения
 	if !IsPost(r.Method, w) {
 		return
 	}

@@ -2,9 +2,15 @@
 package models
 
 type Message struct {
-	Id        string `json:"id"`
-	Chat      string `json:"chat"`
-	Author    string `json:"author"`
-	Text      string `json:"text"`
-	CreatedAt string `json:"created_at"`
+	Chat   int    `json:"chat"`
+	Author int    `json:"author"`
+	Text   string `json:"text"`
+}
+
+func DbMessageAdd(message Message) int {
+	//создать таблицу, если нет
+	res, _ := db.Exec("INSERT INTO chat_data.messages (chat_id, author_id, text) VALUES (?,?,?)", message.Chat, message.Author, message.Text)
+	id, _ := res.LastInsertId()
+
+	return int(id)
 }
