@@ -12,3 +12,9 @@
 
 
 в пакете models содержатся глобальные переменные для работы с БД, функция OpenDb и логика по бд
+
+-models 
+--bd.go
+--users.go
+--messages.go
+--chats.go
