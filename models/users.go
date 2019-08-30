@@ -2,9 +2,7 @@
 package models
 
 type User struct {
-	Id        int    `json:"id"`
-	UserName  string `json:"username"`
-	CreatedAt string `json:"created_at"`
+	UserName string `json:"username"`
 }
 
 func DbUserAdd(u string) int {

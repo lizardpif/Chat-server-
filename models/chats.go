@@ -75,3 +75,51 @@ func DbIsExistChatAuthor(chat_id int, author_id int, tablename string, param str
 	}
 	return false
 }
+
+func DbListOfChats(user_id int) []int {
+	str := fmt.Sprintf("SELECT DISTINCT id FROM chat_data.chats WHERE user_id=%d", user_id)
+	rows, err := db.Query(str)
+	if err != nil {
+		//log.Panic(err)
+		return nil
+	}
+	var chat_id int
+	var chats []int
+	for rows.Next() {
+		err = rows.Scan(&chat_id)
+		if err != nil {
+			return nil
+		}
+		chats = append(chats, chat_id)
+	}
+	if len(chats) < 1 {
+		return nil
+	}
+
+	str = "SELECT DISTINCT chat_id FROM `messages` ORDER BY created_at DESC"
+	rows, err = db.Query(str)
+	if err != nil {
+		//log.Panic(err)
+		return nil
+	}
+	j := 0
+	var tmp int
+	for rows.Next() {
+		err = rows.Scan(&chat_id)
+		if err != nil {
+			//fmt.Println("not scan 1")
+			return nil
+		}
+		for i := range chats {
+			if chats[i] == chat_id {
+				tmp = chats[i]
+				chats[i] = chats[j]
+				chats[j] = tmp
+
+				break
+			}
+		}
+		j++
+	}
+	return chats
+}

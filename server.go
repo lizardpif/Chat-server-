@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/CossackPyra/pyraconv"
+
 	"./models"
 )
 
@@ -160,6 +162,27 @@ func GetListOfChats(w http.ResponseWriter, r *http.Request) {
 	if !IsPost(r.Method, w) {
 		return
 	}
+	var user_id int
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "err %q\n", err, err.Error())
+	} else {
+		var result map[string]interface{}
+
+		err = json.Unmarshal([]byte(body), &result)
+		if err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+		//fmt.Fprintln(w, result["user"])
+		user_id = int(pyraconv.ToInt64(result["user"]))
+	}
+	chats := models.DbListOfChats(user_id)
+	if chats == nil {
+		http.Error(w, http.StatusText(400), 400)
+		return
+	}
+	fmt.Fprintln(w, chats)
 }
 func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	//получить список сообщений в чате по времени создания
