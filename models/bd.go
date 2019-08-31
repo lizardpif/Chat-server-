@@ -30,18 +30,18 @@ func DbClose() {
 }
 
 type PrintOut interface {
-	print() string
+	PrintStruct() string
 }
 
 func PrintStruct(p PrintOut) {
-	p.print()
+	p.PrintStruct()
 }
 
-func (m Message) print() string {
+func (m Message) PrintStruct() string {
 	str := fmt.Sprintf("id: %d, chat_id: %d, author_id: %d, text: %s, created_at: %s", m.Id, m.Chat, m.Author, m.Text, m.Date)
 	return str
 }
-func (m Chat) print() string {
-	str := fmt.Sprintf("id: %d, name: %s, users: %s, created_at: %s", m.Id, m.Name, m.Users, m.CreatedAt)
+func (m Chat) PrintStruct() string {
+	str := fmt.Sprintf("id: %d, name: %s, users: %d, created_at: %s", m.Id, m.Name, m.Users, m.CreatedAt)
 	return str
 }

@@ -101,16 +101,16 @@ func DbListOfMessages(chat_id int) []Message {
 }
 
 func DbListOfChats(user_id int) []Chat {
-	str := fmt.Sprintf("SELECT DISTINCT chats_id.id, name, chats_id.created_at FROM (chats_id JOIN chats USING (id)) JOIN messages ON chats_id.id=messages.chat_id WHERE chats.user_id=40 ORDER BY messages.created_at DESC")
+	str := fmt.Sprintf("SELECT DISTINCT chats_id.id, name, chats_id.created_at FROM (chats_id JOIN chats USING (id)) JOIN messages ON chats_id.id=messages.chat_id WHERE chats.user_id=(?) ORDER BY messages.created_at DESC")
 	//
-	rows, err := db.Query(str)
+	rows, err := db.Query(str, user_id)
 	if err != nil {
 		//log.Panic(err)
 		return nil
 	}
 	var chat Chat
 	var chats []Chat
-	var users []int
+
 	var user int
 	for rows.Next() {
 		err = rows.Scan(&chat.Id, &chat.Name, &chat.CreatedAt)
@@ -119,6 +119,7 @@ func DbListOfChats(user_id int) []Chat {
 			//return false
 			return nil
 		}
+		var users []int
 		row, er := db.Query("SELECT user_id FROM chat_data.chats WHERE id=(?)", chat.Id)
 		for row.Next() {
 			er = row.Scan(&user)
@@ -132,5 +133,6 @@ func DbListOfChats(user_id int) []Chat {
 		chat.Users = users
 		chats = append(chats, chat)
 	}
+	//fmt.Println(chat.print())
 	return chats
 }

@@ -183,7 +183,12 @@ func GetListOfChats(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(400), 400)
 		return
 	}
-	fmt.Fprintln(w, chats)
+	for _, ch := range chats {
+		fmt.Fprintln(w, ch.PrintStruct())
+	}
+
+	//fmt.Fprintln(w, chats)
+
 }
 func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	//получить список сообщений в чате по времени создания
@@ -210,7 +215,9 @@ func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, http.StatusText(400), 400)
 	// 	return
 	// }
-	fmt.Fprintln(w, messages)
+	for _, ch := range messages {
+		fmt.Fprintln(w, ch.PrintStruct())
+	}
 
 }
 
