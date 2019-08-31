@@ -142,6 +142,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		//существует ли чат?
 		//существует ли автор?
 		if !models.DbIsExistChatAuthor(msg.Chat, msg.Author, "chat_data.chats", "id") {
+
 			http.Error(w, http.StatusText(400), 400)
 			return
 		}
@@ -189,6 +190,28 @@ func GetListOfMessages(w http.ResponseWriter, r *http.Request) {
 	if !IsPost(r.Method, w) {
 		return
 	}
+	var user_id int
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "err %q\n", err, err.Error())
+	} else {
+		var result map[string]interface{}
+
+		err = json.Unmarshal([]byte(body), &result)
+		if err != nil {
+			http.Error(w, http.StatusText(400), 400)
+			return
+		}
+		//fmt.Fprintln(w, result["user"])
+		user_id = int(pyraconv.ToInt64(result["chat"]))
+	}
+	messages := models.DbListOfMessages(user_id)
+	// if chats == nil {
+	// 	http.Error(w, http.StatusText(400), 400)
+	// 	return
+	// }
+	fmt.Fprintln(w, messages)
+
 }
 
 func IsRepeate(users []int) bool {

@@ -4,8 +4,10 @@ package models
 import "fmt"
 
 type Chat struct {
-	Name  string `json:"name"`
-	Users []int  `json:"users"`
+	Id        int
+	Name      string `json:"name"`
+	Users     []int  `json:"users"`
+	CreatedAt string
 }
 
 //новый чат между пользователями
@@ -63,10 +65,12 @@ func DbIsExistChatAuthor(chat_id int, author_id int, tablename string, param str
 	defer row.Close()
 	var scan_id int
 	var ch_id int
+
 	for row.Next() {
 
-		err = row.Scan(&scan_id, &ch_id)
+		err = row.Scan(&ch_id, &scan_id)
 		if err != nil {
+
 			return false
 		}
 		if author_id == scan_id {
@@ -76,50 +80,57 @@ func DbIsExistChatAuthor(chat_id int, author_id int, tablename string, param str
 	return false
 }
 
-func DbListOfChats(user_id int) []int {
-	str := fmt.Sprintf("SELECT DISTINCT id FROM chat_data.chats WHERE user_id=%d", user_id)
+func DbListOfMessages(chat_id int) []Message {
+	str := fmt.Sprintf("SELECT * FROM chat_data.messages WHERE chat_id=(?)")
+	rows, err := db.Query(str, chat_id)
+	if err != nil {
+		return nil
+	}
+	var msgs []Message
+
+	for rows.Next() {
+		var msg Message
+		err := rows.Scan(&msg.Id, &msg.Chat, &msg.Author, &msg.Text, &msg.Date)
+		if err != nil {
+			return nil
+		}
+		//fmt.Println("msg ", msg)
+		msgs = append(msgs, msg)
+	}
+	return msgs
+}
+
+func DbListOfChats(user_id int) []Chat {
+	str := fmt.Sprintf("SELECT DISTINCT chats_id.id, name, chats_id.created_at FROM (chats_id JOIN chats USING (id)) JOIN messages ON chats_id.id=messages.chat_id WHERE chats.user_id=40 ORDER BY messages.created_at DESC")
+	//
 	rows, err := db.Query(str)
 	if err != nil {
 		//log.Panic(err)
 		return nil
 	}
-	var chat_id int
-	var chats []int
+	var chat Chat
+	var chats []Chat
+	var users []int
+	var user int
 	for rows.Next() {
-		err = rows.Scan(&chat_id)
-		if err != nil {
-			return nil
-		}
-		chats = append(chats, chat_id)
-	}
-	if len(chats) < 1 {
-		return nil
-	}
-
-	str = "SELECT DISTINCT chat_id FROM `messages` ORDER BY created_at DESC"
-	rows, err = db.Query(str)
-	if err != nil {
-		//log.Panic(err)
-		return nil
-	}
-	j := 0
-	var tmp int
-	for rows.Next() {
-		err = rows.Scan(&chat_id)
+		err = rows.Scan(&chat.Id, &chat.Name, &chat.CreatedAt)
 		if err != nil {
 			//fmt.Println("not scan 1")
+			//return false
 			return nil
 		}
-		for i := range chats {
-			if chats[i] == chat_id {
-				tmp = chats[i]
-				chats[i] = chats[j]
-				chats[j] = tmp
-
-				break
+		row, er := db.Query("SELECT user_id FROM chat_data.chats WHERE id=(?)", chat.Id)
+		for row.Next() {
+			er = row.Scan(&user)
+			if er != nil {
+				//fmt.Println("not scan 2")
+				//return false
+				return nil
 			}
+			users = append(users, user)
 		}
-		j++
+		chat.Users = users
+		chats = append(chats, chat)
 	}
 	return chats
 }
