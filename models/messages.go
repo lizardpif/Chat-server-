@@ -9,6 +9,12 @@ type Message struct {
 	Date   string
 }
 
+type TmpMessage struct {
+	Chat   string
+	Author string
+	Text   string
+}
+
 func DbMessageAdd(message Message) int {
 	//создать таблицу, если нет
 	res, err := db.Exec("INSERT INTO chat_data.messages (chat_id, author_id, text) VALUES (?,?,?)", message.Chat, message.Author, message.Text)
